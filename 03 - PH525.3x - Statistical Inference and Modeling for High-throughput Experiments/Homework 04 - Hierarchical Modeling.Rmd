@@ -1,0 +1,276 @@
+---
+title: "Homework 04 - Hierarchical Modeling"
+author: "Alessandro Corradini - Harvard Data Science for Life Science XSeries"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Bayes Rule Exercises
+
+### Bayes Rule Exercises #1
+
+A test for cystic fibrosis has an accuracy of 99%. Specifically, we mean that the probability of a positive test if you have the disease is 0.99 and this is also equal to the probability of testing negative if you don't have the disease:
+
+$\ \mbox{Prob}(+|D)=0.99, \mbox{Prob}(-|\mbox{no } D)=0.99$
+
+The cystic fibrosis rate in the general population is 1 in 3,900, **Prob(D) = 0.00025**
+If we select a random person and they test positive, what is probability that they have cystic fibrosis **Prob(D|+)**? Hint: use Bayes Rule: 
+
+$\ \mbox{Pr}(A|B)  =  \frac{\mbox{Pr}(B|A)\mbox{Pr}(A)}{\mbox{Pr}(B)}$
+
+$\ \begin{eqnarray*}
+\mbox{Prob}(D|+) & = & \frac{ P(+|D) \cdot P(D)} {\mbox{Prob}(+)} \\
+& = & \frac{\mbox{Prob}(+|D)\cdot P(D)} {\mbox{Prob}(+|D) \cdot P(D) + \mbox{Prob}(+|\mbox{no } D) \mbox{Prob}(\mbox{no } D)} \\
+  \end{eqnarray*}$
+  
+so
+
+$\ \begin{eqnarray*}
+\mbox{Prob}(D|+) & = & \frac{ P(+|D) \cdot P(D)} {\mbox{Prob}(+)} \\
+& = & \frac{\mbox{Prob}(+|D)\cdot P(D)} {\mbox{Prob}(+|D) \cdot P(D) + \mbox{Prob}(+|\mbox{no } D) \mbox{Prob}(\mbox{no } D)} \\
+& = & \frac{0.99 \cdot 0.00025}{0.99 \cdot 0.00025 + 0.01 \cdot (.99975)} \\
+& = & 0.02415813 \
+\end{eqnarray*}$
+
+## Bayes' Rule in Practice Exercises
+
+First download some baseball statistics.
+
+```{r}
+tmpfile <- tempfile()
+tmpdir <- tempdir()
+download.file("http://seanlahman.com/files/database/lahman-csv_2014-02-14.zip",tmpfile)
+##this shows us files
+filenames <- unzip(tmpfile,list=TRUE)
+players <- read.csv(unzip(tmpfile,files="Batting.csv",exdir=tmpdir),as.is=TRUE)
+unlink(tmpdir)
+file.remove(tmpfile)
+```
+
+In our first course we learned to use the dplyr package. Please review for example with this tutorial.
+
+Here we use dplyr to obtain the necessary information to perform a hierarchical model.
+
+### Bayes' Rule in Practice Exercises #1
+
+Which of the following dplyr commands gives us the batting averages (AVG) for players with more than 500 at bats (AB) in 2012:
+
+- players$AVG
+- **filter(players,yearID==2012) %>% mutate(AVG=H/AB) %>% filter(AB>=500) %>% select(AVG)**
+- filter(players,yearID==2012) %>% mutate(AVG=H/AB) %>% select(AVG)
+- filter(players,yearID==2012) %>% mutate(AVG=H/AB) %>% filter(AB>=500) %>% select(AVG) %>% mutate(AVG=mean(AVG))
+
+### Bayes' Rule in Practice Exercises #2
+
+Edit the command above to obtain all the batting averages from 2010, 2011, 2012 and removing rows with AB < 500.
+
+What is the average of these batting averages?
+
+```{r}
+library(dplyr)
+dat <- filter(players,yearID>=2010, yearID <=2012) %>% mutate(AVG=H/AB) %>% filter(AB>500) %>% select(AVG)
+
+mean(dat$AVG)  
+```
+
+### Bayes' Rule in Practice Exercises #3
+
+What is the standard deviation of these batting averages?
+
+```{r}
+sd(dat$AVG)
+```
+
+### Bayes' Rule in Practice Exercises #4
+
+Use exploratory data analysis to decide which of the following distributions approximates the distribution of the average across players (hint: this is contained in the AVG component)?
+
+```{r}
+qqnorm(dat$AVG)
+
+qqline(dat$AVG)
+```
+
+- Poisson
+- **Normal**
+- F-distribution
+- Uniform
+
+### Bayes' Rule in Practice Exercises #5
+
+It is April and after 20 at bats, Jose Iglesias is batting .450 (this is very good). We can think of this as a binomial distribution with 20 trials with probability of success p. Our sample estimate of p is .450. What is our estimate of standard deviation? Hint: This AVG a sum of Bernoulli trials, that is binomial, divided by 20.
+
+```{r}
+sqrt(.45*(1-.45)/20)
+```
+
+### Bayes' Rule in Practice Exercises #6
+
+The Binomial is approximated by normal when the sample size is large, so our sampling distribution is approximately normal with mean  = 0.45 and SD . Earlier we used a baseball database to determine that our prior distribution for  is Normal with mean  and SD 
+We saw that this is the posterior mean prediction of the batting average.
+
+$\ \begin{eqnarray*}
+\mbox{E}(\theta|Y) &=& B \mu + (1-B) Y\\
+
+&=& \mu + (1-B)(Y-\mu)\\
+
+B &=& \frac{\sigma^2}{\sigma^2+\tau^2}
+\end{eqnarray*}$
+
+What is your estimate of Jose Iglesias' batting average going forward taking into account his current batting average?
+
+$\ \begin{eqnarray*}
+E(\theta | Y=.450) &=& B \times .275 + (1 - B) \times .450 \\
+
+&=& .275 + (1 - B)(.450 - .260) \\
+
+B &=&\frac{.110^2}{.110^2 + .027^2} = 0.943\\
+
+E(\theta | Y=450) &=& 0.2849443\\
+
+\end{eqnarray*}$
+
+## Hierarchical Models in Practice Exercises
+
+Load the following data (you can install it from Bioconductor) and extract the data matrix using exprs:
+
+```{r}
+## to install:
+library(rafalib)
+install_bioc("SpikeInSubset")
+install_bioc("genefilter")
+install_bioc("limma")
+library(Biobase)
+library(SpikeInSubset)
+data(rma95)
+y <- exprs(rma95)
+```
+
+If you have trouble installing the  SpikeInSubset package please consult the discussion boards.
+
+This dataset comes from an experiment in which RNA was obtained from the same background pool to create six replicate samples. Then RNA from 16 genes were artificially added in different quantities to each sample. These quantities (in picoMolars) and gene IDs are stored here:
+
+```{r}
+pData(rma95)
+```
+
+Note that these quantities were the same in the first three arrays and in the last three arrays. So we define two groups like this:
+
+```{r}
+g <- factor(rep(0:1,each=3))
+```
+
+and create an index of which rows are associated with the artificially added genes:
+
+```{r}
+spike <- rownames(y) %in% colnames(pData(rma95))
+```
+
+### Hierarchical Models in Practice Exercises #1
+
+Note that only these 16 genes are differentially expressed since these six samples differ only due to random sampling (they all come from the same background pool of RNA).
+
+Perform a t-test on each gene using the rowttests function in the genefilter package.
+
+What proportion of genes with a p-value < 0.01 (no multiple comparison correction) are not part of the artificially added (false positive)?
+
+```{r}
+library(genefilter)
+rtt = rowttests(y,g)
+index = rtt$p.value < 0.01 
+print (mean( !spike[index] ))
+## We can make a volcano plot to visualize this:
+mask <- with(rtt, abs(dm) < .2 & p.value < .01)
+cols <- ifelse(mask,"red",ifelse(spike,"dodgerblue","black"))
+with(rtt,plot(-dm, -log10(p.value), cex=.8, pch=16,
+     xlim=c(-1,1), ylim=c(0,5),
+     xlab="difference in means",
+     col=cols))
+abline(h=2,v=c(-.2,.2), lty=2)
+```
+
+### Hierarchical Models in Practice Exercises #2
+
+Now compute the within group sample standard deviation for each gene (you can use group 1). Based on the p-value < 0.01 cut-off, split the genes into true positives, false positives, true negatives and false negatives. Create a boxplot comparing the sample SDs for each group. Which of the following best described the box-plot?
+
+```{r}
+
+library(genefilter)
+sds <- rowSds(y[,g==0])
+index <- paste0( as.numeric(spike), as.numeric(rtt$p.value<0.01))
+index <- factor(index,levels=c("11","01","00","10"),labels=c("TP","FP","TN","FN"))
+boxplot(split(sds,index))
+```
+
+- The standard deviation is similar across all groups.
+- On average, the true negatives have much larger variability.
+- The false negatives have larger variability.
+- **The false positives have smaller standard deviation.**
+
+### Hierarchical Models in Practice Exercises #3
+
+In the previous two questions we observed results consistent with the fact that the random variability associated with the sample standard deviation leads to t-statistics that are large by chance.
+
+Note that the sample standard deviation we use in the t-test is an estimate and that with just a pair of triplicate samples, the variability associated with the denominator in the t-test can be large.
+
+The following three steps perform the basic limma analysis. The eBayes step uses a hierarchical model that provides a new estimate of the gene specific standard error.
+
+```{r}
+library(limma)
+fit <- lmFit(y, design=model.matrix(~ g))
+colnames(coef(fit))
+fit <- eBayes(fit)
+```
+
+Make a plot of the original new hierarchical models based estimate versus the sample based estimate.
+
+```{r}
+sampleSD = fit$sigma
+posteriorSD = sqrt(fit$s2.post)
+```
+
+Which best describes what the hierarchical modelling approach does?
+
+```{r}
+LIM = range( c(posteriorSD,sampleSD))
+plot(sampleSD, posteriorSD,ylim=LIM,xlim=LIM)
+abline(0,1)
+abline(v=sqrt(fit$s2.prior))
+```
+
+- **Moves all the estimates of standard deviation closer to 0.12.**
+- Increases the estimates of standard deviation to increase t.
+- Decreases the estimate of standard deviation.
+- Decreases the effect size estimates.
+
+### Hierarchical Models in Practice Exercises #4
+
+Use these new estimates (computed in Question 4.6.3) of standard deviation in the denominator of the t-test and compute p-values. You can do it like this:
+
+```{r}
+library(limma)
+fit = lmFit(y, design=model.matrix(~ g))
+fit = eBayes(fit)
+##second coefficient relates to diffences between group
+pvals = fit$p.value[,2]
+```
+
+What proportion of genes with a p-value < 0.01 (no multiple comparison correction) are not part of the artificially added (false positives)?
+
+```{r}
+index = pvals < 0.01 
+print (mean( !spike[index] ))
+## We can make a volcano plot to visualize this:
+mask <- abs(fit$coef[,2]) < .2 & fit$p.value[,2] < .01
+cols <- ifelse(mask,"red",ifelse(spike,"dodgerblue","black"))
+plot(fit$coef[,2], -log10(fit$p.value[,2]), cex=.8, pch=16,
+     xlim=c(-1,1), ylim=c(0,5),
+     xlab="difference in means",
+     col=cols)
+abline(h=2,v=c(-.2,.2), lty=2)
+```

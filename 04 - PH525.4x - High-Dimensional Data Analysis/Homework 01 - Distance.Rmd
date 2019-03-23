@@ -1,0 +1,92 @@
+---
+title: "Homework 01 - Distance"
+author: "Alessandro Corradini - Harvard Data Science for Life Science XSeries"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Distance Exercises
+
+### Distance Exercises #1
+
+If you have not done so already, install the data package tissueGeneExpression.
+
+```{r}
+  library(devtools)
+  install_github("genomicsclass/tissuesGeneExpression")
+```
+
+The data represents RNA expression levels for seven tissues, each with several biological replictes. We call samples that we consider to be from the same population, such as liver tissue from different individuals,biological replictes:
+
+```{r}
+library(tissuesGeneExpression)
+data(tissuesGeneExpression)
+head(e)
+head(tissue)
+```
+
+How many biological replicates for hippocampus?
+
+```{r}
+sum(tissue=="hippocampus")
+```
+
+### Distance Exercises #2
+
+What is the distance between samples 3 and 45?
+
+```{r}
+sqrt( sum((e[,3]-e[,45])^2 ))
+```
+
+### Distance Exercises #3
+
+What is the distance between gene 210486_at and 200805_at
+
+```{r}
+sqrt( sum((e[,3]-e[,45])^2 ))
+```
+
+### Distance Exercises #4
+
+If I run the command (don't run it!)
+
+```
+d = as.matrix(dist( e))
+```
+
+How many cells (number of rows times number of columns) would this matrix have?
+
+```{r}
+nrow(e)^2
+```
+
+### Distance Exercises #5
+
+Compute the distance between all pairs of samples:
+
+```{r}
+d = dist(t(e))
+```
+
+Read the help file for dist.
+
+How many distances are stored in d? (Hint: What is the length of d)?
+
+```{r}
+length(d)
+```
+
+### Distance Exercises #6
+
+Why is the answer above not ncol(e)^2?
+
+- R made a mistake there
+- Distances of 0 are left out
+- <strong> Because we take advantage of symmetry: only lower triangular matrix is stored thus only ncol(e)*(ncol(e)-1)/2 values </strong>
+- Because it is equal to nrow(e)^2

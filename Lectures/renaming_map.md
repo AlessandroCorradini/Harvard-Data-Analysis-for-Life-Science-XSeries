@@ -1,0 +1,20 @@
+# renaming map
+
+from | to
+--- | ---
+1 | intro
+1 | inference
+1 | eda
+1 | robust
+2 | matrixalg
+2 | linear
+3 | advinference
+3 | modeling
+3 | highdim
+3 | ml
+3 | batch
+4 | bioc
+5 | rnaseq
+6 | variants
+7 | chipseq
+8 | methyl

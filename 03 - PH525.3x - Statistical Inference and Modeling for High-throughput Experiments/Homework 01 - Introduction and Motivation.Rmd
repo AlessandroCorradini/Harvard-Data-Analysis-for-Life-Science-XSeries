@@ -1,0 +1,189 @@
+---
+title: "Homework 01 - Introduction and Motivation"
+author: "Alessandro Corradini - Harvard Data Science for Life Science XSeries"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Refresher Exercises
+
+As stated in the pre-requisites, you should be familiar with R. This assessment serves as a refresher while at the same time introduces you to high-throughput data.
+
+You should make sure that the devtools package is installed and working. In most cases this package installs with no problems, but problems are unfortunately common. Please do not hesitate to ask for help on the Discussion board. We have purposely have included less material in week 1 to give everybody a chance to install all the necessary tools and catch up in R programming.
+
+Note that in this course we will be using base R rather than the dplyr approach used in course 1. You should become familiar with subsetting such as the following: to subset a matrix dat for which the third column is larger than k you do as follows:
+
+```
+dat[ dat[,3] > k , ]
+```
+
+You should also be familiar with functions such as apply, match, and which. You should also be able to write your own functions. If you need a review, you should go through the swirl:
+
+```
+install.packages(swirl)
+library(swirl)
+swirl()
+```
+
+Here we provide some assessment questions to test yourself.
+
+The workload for week 1 is kept relatively small to give students time to install the necessary packages and hone their R skills.
+
+### R Refresher Exercises #1
+
+Download and install the GSE5859Subset package then load the data.
+
+```{r}
+library(devtools)
+install_github("genomicsclass/GSE5859Subset")
+library(GSE5859Subset)
+data(GSE5859Subset) ##this loads the three tables
+```
+How many samples where processed on 2005-06-27?
+
+```{r}
+sum(sampleInfo$date=="2005-06-27")
+```
+
+### R Refresher Exercises #2
+
+How many of the genes represented in this particular technology are on chromosome Y?
+
+```{r}
+sum(geneAnnotation$CHR=="chrY",na.rm=TRUE)
+```
+
+
+### R Refresher Exercises #3
+
+What is the log expression value of the for gene ARPC1A on the one subject that we measured on 2005-06-10?
+
+```{r}
+i = which(geneAnnotation$SYMBOL=="ARPC1A")
+j = which(sampleInfo$date=="2005-06-10")
+geneExpression[i,j]
+
+```
+
+
+### R Refresher Exercises #4
+
+Use the function apply to find the median value of each column. What is the median value of these values?
+
+```{r}
+meds <- apply(geneExpression,2,median)
+median(meds)    
+```
+
+### R Refresher Exercises #5
+
+This problem is more advanced than the previous ones. Note that it might take you some time to solve and you should feel free to seek help in the discussion forum. The exercises is meant to motivate you to learn a an imporant R skills: creating functions to use with apply.
+
+Write a function that takes a vector of values e and a binary vector group coding two groups, and returns the p-value from a t-test: t.test( e[group==1], e[group==0])$p.value.
+
+Now define g to code cases (1) and controls (0) like this g <- factor(sampleInfo$group)
+
+Next use the function apply to run a t-test for each row of geneExpression and obtain the p-value. What is smallest p-value among all these t-tests?
+
+```{r}
+myttest <- function(e,group){
+  	x <- e[group==1]
+  	y <- e[group==0]
+    return( t.test(x,y)$p.value )
+}
+g <- factor(sampleInfo$group)
+pvals <- apply(geneExpression,1,myttest, group=g)
+min( pvals )    
+```
+
+## Inference in Practice Exercises
+
+### Inference in Practice Exercises #1
+
+These exercises will help clarify that p-values are random variables and some of the properties of these p-values. Note that just like the sample average is a random variable because it is based on a random sample, the p-values are based on random variables (sample mean and sample standard deviation for example) and thus it is also a random variable.
+
+To see this, let's see how p-values change when we take different samples.
+
+```{r}
+set.seed(1)
+library(downloader)
+url = "https://raw.githubusercontent.com/genomicsclass/dagdata/master/inst/extdata/femaleControlsPopulation.csv"
+filename = "femaleControlsPopulation.csv"
+if (!file.exists(filename)) download(url,destfile=filename)
+population = read.csv(filename)
+pvals <- replicate(1000,{
+  control = sample(population[,1],12)
+  treatment = sample(population[,1],12)
+  t.test(treatment,control)$p.val
+})
+head(pvals)
+hist(pvals)
+```    
+Question: What proportion of the p-values is below 0.05?
+
+### Inference in Practice Exercises #2
+
+What proportion of the p-values are below 0.01?
+
+```{r}
+mean(pvals < 0.01)
+```
+
+### Inference in Practice Exercises #3
+
+Assume you are testing the effectiveness of 20 diets on mice weight. For each of the 20 diets you run an experiment with 10 control mice and 10 treated mice. Assume the null hypothesis that the diet has no effect is true for all 20 diets and that mice weights follow a normal distribution with mean 30 grams and a standard deviation of 2 grams, run a Monte Carlo simulation for one of these studies:
+
+```{r}
+cases = rnorm(10,30,2)
+controls = rnorm(10,30,2)
+t.test(cases,controls)
+```
+Now run a Monte Carlo simulation imitating the results for the experiment for all 20 diets. If you set the seed at 100, set.seed(100), and use the same code as above inside a call to replicate how many of p-values (number not proportion) are below 0.05?
+
+```{r}
+set.seed(100)
+pvals<- replicate(20,{
+  cases = rnorm(10,30,2)
+  controls = rnorm(10,30,2)
+  t.test(cases,controls)$p.value
+})
+sum(pvals<=0.05)
+```
+
+### Inference in Practice Exercises #4
+
+Now create a simulation to learn about the distribution of the number of p-values that are less than 0.05. In question 1.2.3 we ran the 20 diet experiment once. Now we will run these 20 experiments 1,000 times and each time save the number of p-values that are less than 0.05.
+
+Set the seed at 100 again, set.seed(100), run the code from Question 1.2.3 1,000 times, and save the number of times the p-value is less than 0.05 for each of the 1,000 instances.
+
+What is the average of these 1,000 numbers? Note that this is the expected number of tests (out of the 20 we run) that we will reject when the null is true. (Hint: use replicate twice)
+
+```{r}
+set.seed(100)
+B = 1000
+plessthan = replicate(B,{
+  pvals = replicate(20,{
+    cases = rnorm(10,30,2)
+    controls = rnorm(10,30,2)
+    t.test(cases,controls)$p.value
+    })
+  sum(pvals<=0.05)
+})
+table(plessthan) ##just for illustration
+mean(plessthan)
+```
+
+### Inference in Practice Exercises #5
+
+Note that what the answer to question #4 says is that on average, we expect some p-value to be 0.05 even when the null is true for all diets.
+
+Using the same simulation data from the question above, for what proportion of the 1,000 replications do we reject the null hypothesis at least once (more than 0 false positives)? (Enter your response as a decimal value -- i.e. 0.10 for 10%.)
+
+```{r}
+mean(plessthan>0)
+```

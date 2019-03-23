@@ -1,0 +1,176 @@
+---
+title: "Homework 02 - Random Variables and Probability Distributions"
+author: "Alessandro Corradini - Harvard Data Science for Life Science XSeries"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Random Variables Exercises
+
+For these exercises, we will be using the following dataset:
+
+```{r}
+library(downloader) 
+url <- "https://raw.githubusercontent.com/genomicsclass/dagdata/master/inst/extdata/femaleControlsPopulation.csv"
+filename <- basename(url)
+download(url, destfile=filename)
+x <- unlist( read.csv(filename) )
+```
+
+Here x represents the weights for the entire population.
+
+### Random Variables Exercises #1
+
+What is the average of these weights?
+
+```{r}
+mean(x)
+```
+
+### Random Variables Exercises #2
+
+After setting the seed at 1, set.seed(1) take a random sample of size 5. What is the absolute value (use abs) of the difference between the average of the sample and the average of all the values?
+
+```{r}
+set.seed(1)
+X <- sample(x,5)
+abs(mean(X) - mean(x))
+```
+
+### Random Variables Exercises #3
+
+After setting the seed at 5, set.seed(5) take a random sample of size 5. What is the absolute value of the difference between the average of the sample and the average of all the values?
+
+```{r}
+set.seed(5)
+X <- sample(x,5)
+abs(mean(X) - mean(x))
+```
+
+### Random Variables Exercises #4
+
+Why are the answers from 2 and 3 different?
+
+- Because we made a coding mistake.
+- Because the average of the x is random.
+- **Because the average of the samples is a random variable.**
+- All of the above.
+
+## Null Distributions Exercises
+
+For these exercises, we will be using the following dataset:
+
+```{r}
+library(downloader) 
+url <- "https://raw.githubusercontent.com/genomicsclass/dagdata/master/inst/extdata/femaleControlsPopulation.csv"
+filename <- basename(url)
+download(url, destfile=filename)
+x <- unlist( read.csv(filename) )
+```
+
+Here x represents the weights for the entire population.
+
+### Null Distributions Exercises #1
+
+Set the seed at 1, then using a for-loop take a random sample of 5 mice 1,000 times. Save these averages. What proportion of these 1,000 averages are more than 1 gram away from the average of x ?
+
+```{r}
+set.seed(1)
+n <- 1000
+averages5 <- vector("numeric",n)
+for(i in 1:n){
+  X <- sample(x,5)
+  averages5[i] <- mean(X)
+}
+hist(averages5) ##take a look
+mean( abs( averages5 - mean(x) ) > 1)
+```
+
+### Null Distributions Exercises #2
+
+We are now going to increase the number of times we redo the sample from 1,000 to 10,000. Set the seed at 1, then using a for-loop take a random sample of 5 mice 10,000 times. Save these averages. What proportion of these 10,000 averages are more than 1 gram away from the average of x ?
+
+```{r}
+set.seed(1)
+n <- 10000
+averages5 <- vector("numeric",n)
+for(i in 1:n){
+  X <- sample(x,5)
+  averages5[i] <- mean(X)
+}
+hist(averages5) ##take a look
+mean( abs( averages5 - mean(x) ) > 1)
+```
+
+### Null Distributions Exercises #3
+
+Note that the answers to 1 and 2 barely changed. This is expected. The way we think about the random value distributions is as the distribution of the list of values obtained if we repeated the experiment an infinite number of times. On a computer, we can't perform an infinite number of iterations so instead, for our examples, we consider 1,000 to be large enough, thus 10,000 is as well. Now if instead we change the sample size, then we change the random variable and thus its distribution.
+
+Set the seed at 1, then using a for-loop take a random sample of 50 mice 1,000 times. Save these averages. What proportion of these 1,000 averages are more than 1 gram away from the average of x ?
+
+```{r}
+set.seed(1)
+n <- 1000
+averages50 <- vector("numeric",n)
+for(i in 1:n){
+  X <- sample(x,50)
+  averages50[i] <- mean(X)
+}
+hist(averages50) ##take a look
+mean( abs( averages50 - mean(x) ) > 1)
+```
+
+## Probability Distributions Exercises
+
+In the video you just watched, Rafa looked at distributions of heights, and asked what was the probability of someone being shorter than a given height. In this assessment, we are going to ask the same question, but instead of people and heights, we are going to look at whole countries and the average life expectancy in those countries.
+
+We will use the data set called "Gapminder" which is available as an R-package on Github. This data set contains the life expectancy, GDP per capita, and population by country, every five years, from 1952 to 2007. It is an excerpt of a larger and more comprehensive set of data available on Gapminder.org, and the R package of this dataset was created by the statistics professor Jennifer Bryan.
+
+First, install the gapminder data using:
+
+```{r}
+install.packages("gapminder")
+```
+
+Next, load the gapminder data set. To find out more information about the data set, use ?gapminder which will bring up a help file. To return the first few lines of the data set, use the function head().
+
+```{r}
+library(gapminder)
+data(gapminder)
+head(gapminder)
+```
+
+Create a vector 'x' of the life expectancies of each country for the year 1952. Plot a histogram of these life expectancies to see the spread of the different countries.
+
+### Probability Distributions Exercises #1
+
+In statistics, the empirical cumulative distribution function (or empirical cdf or empirical distribution function) is the function F(a) for any a, which tells you the proportion of the values which are less than or equal to a.
+
+We can compute F in two ways: the simplest way is to type mean(x <= a). This calculates the number of values in x which are less than or equal a, divided by the total number of values in x, in other words the proportion of values less than or equal to a.
+
+The second way, which is a bit more complex for beginners, is to use the ecdf() function. This is a bit complicated because this is a function that doesn't return a value, but a function.
+
+Let's continue, using the simpler, mean() function.
+
+What is the proportion of countries in 1952 that have a life expectancy less than or equal to 40?
+
+```{r}
+dat1952 = gapminder[ gapminder$year == 1952, ]
+
+x = dat1952$lifeExp
+
+mean(x <= 40)
+```
+
+### Probability Distributions Exercises #2
+
+What is the proportion of countries in 1952 that have a life expectancy between 40 and 60 years? Hint: this is the proportion that have a life expectancy less than or equal to 60 years, minus the proportion that have a life expectancy less than or equal to 40 years.
+
+```{r}
+mean(x <= 60) - mean(x <= 40)
+```

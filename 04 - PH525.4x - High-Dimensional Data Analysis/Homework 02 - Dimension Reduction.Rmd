@@ -1,0 +1,385 @@
+---
+title: "Homework 02 - Dimension Reduction"
+author: "Alessandro Corradini - Harvard Data Science for Life Science XSeries"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Projections Exercises
+
+We will continue to use this dataset:
+
+```{r}
+library(Biobase)
+library(GSE5859Subset)
+data(GSE5859Subset)
+```
+
+Note: If you need to, watch the next video and then come back to these exercises.
+
+### Projections Exercises #1
+
+Suppose you want to make an MA plot of the first two samples y = geneExpression[,1:2]. Which of the following projections of y gives us new coordinates such that column 2 versus column 1 is an MA plot?
+
+- $\ y \begin{pmatrix} 1/\sqrt{2}&1/ \sqrt{2} \\ 1/ \sqrt{2}&-1/\sqrt{2}\end{pmatrix}$
+- **$\ y \begin{pmatrix} 1&1 \\ 1&-1\end{pmatrix}$**
+- $\ \begin{pmatrix} 1&1 \\ 1&-1\end{pmatrix} y$
+- $\ \begin{pmatrix} 1&1 \\ 1&-1\end{pmatrix} y'$
+
+## Projections Exercise #2
+
+Say Y is M x N, in the SVD $\ Y=UDV^\top$ which of the following is NOT correct?
+
+- $\ DV^\top$ are the new coordinates for the projection $\ U^ \top Y$
+- UD are the new coordinates for the projection YV
+- **D are the coordinates of the projection $\ U^ \top Y$**
+- $\ U^ \top Y$ is a projection from an M - dimensional to N - dimensional subspace.
+ 
+## SVD Exercises
+
+For the following questions use the data loaded with:
+
+```{r}
+library(tissuesGeneExpression)
+data(tissuesGeneExpression)
+```
+
+Important note: When using the SVD in practice it is important to note that the solution to SVD is not unique. This is because $\ \mathbf{UDV^\top} = \mathbf{ (-U) D (-V)^\top}$. In fact we can flip the sign of each column of  and as long as we also flip the respective column in  the decompostion works. Here R code demonstrting this:
+
+```{r}
+s = svd(e)
+signflips = sample(c(-1,1),ncol(e),replace=TRUE)
+signflips
+```
+
+Now we switch the sign of each column and check that we get the same answer. We do this using the function sweep. If x is a matrix and a is a vector, then sweep(x,1,y,FUN="*") applies the fun FUN to each row i FUN(x[i,],a[i]), in this case x[i,]*a[i]. If instead of 1 we use 2 sweep applies this to columns. To learn about sweep read ?sweep. 
+
+```{r}
+newu= sweep(s$u,2,signflips,FUN="*")
+newv= sweep(s$v,2,signflips,FUN="*" )
+all.equal( s$u %*% diag(s$d) %*% t(s$v), newu %*% diag(s$d) %*% t(newv))
+```
+
+This is important to know because different implementations of the SVD algorithm may give different signs, which can lead to the same code resulting in different answers when run in different computer systems.
+
+### SVD Exercises #1
+
+Compute the SVD of e
+
+```{r}
+s = svd(e)
+```
+
+Now compute the mean of each row:
+
+```{r}
+m = rowMeans(e)
+```
+
+What is the correlation between the first column of U and m?
+
+```{r}
+cor(s$u[,1],m)
+```
+
+### SVD Exercises #2
+
+In the above question we saw how the first column relates to the mean of the rows of e. Note that if we change these means, the distances between columns do not change. Here some R code showing how changing the means does not change the distances:
+
+```{r}
+newmeans = rnorm(nrow(e)) ##random values we will add to create new means
+newe = e+newmeans ##we change the means
+sqrt(crossprod(e[,3]-e[,45]))
+sqrt(crossprod(newe[,3]-newe[,45])) 
+```
+
+So we might as well make the mean of each row 0 since it does not help us approximate the column distances. We will define y as the detrended e and recompute the SVD:
+
+```{r}
+y = e - rowMeans(e)
+s = svd(y)
+```
+
+We showed that $\ \mathbf{UDV^\top}$ is equal to  up to numerical error
+
+```{r}
+resid = y - s$u %*% diag(s$d) %*% t(s$v)
+max(abs(resid))
+```
+
+The above can be made more efficient in two ways. First, using the crossprod and second not creating a diagonal matrix. Note that in R we can multiply a matrix x by vector a. The result is a matrix with row i equal to x[i,]*a[i]. Here is an example to illustrate this.
+
+```{r}
+x=matrix(rep(c(1,2),each=5),5,2)
+x
+
+x*c(1:5)
+```
+
+Note that the above code is actually equivalent to:
+
+```{r}
+sweep(x,1,1:5,"*")
+```
+
+This means that we don't have to convert s$d into a matrix to obtain $\ \mathbf{DV^\top}$.
+
+Which of the following gives us the same as diag(s$d)%*%t(s$v)
+
+- s$d %*% t(s$v)1
+- **s$d * t(s$v)**
+- t(s$d * s$v)
+- s$v * s$d
+
+### SVD Exercises #3
+
+If we define vd = t(s$d * t(s$v)) then which of the following is not the same  :
+
+- tcrossprod(s$u,vd)
+- **s$u %*% s$d * t(s$v)**
+- s$u %*% (s$d * t(s$v) )
+- tcrossprod( t( s$d*t(s$u)) , s$v)
+
+### SVD Exercises #4
+1/1 point (graded)
+Let ```z = s$d * t(s$v)```. We showed derivation demonstrating that because  is orthogonal the distance between e[,3] and e[,45] is the same as the distance between y[,3] and y[,45] which is the same as z[,3] and z[,45]
+
+```{r}
+z = s$d * t(s$v)
+
+sqrt(crossprod(e[,3]-e[,45]))
+sqrt(crossprod(y[,3]-y[,45]))
+sqrt(crossprod(z[,3]-z[,45]))
+```
+
+Note that the columns z have 189 entries, compared to 22,215 for e.
+
+What is the difference (in absolute value) between the actual distance sqrt(crossprod(e[,3]-e[,45])) and the approximation using only two dimension of z
+
+```{r}
+realdistance = sqrt(crossprod(e[,3]-e[,45]))
+approxdistance = sqrt(crossprod(z[1:2,3]-z[1:2,45]))
+abs(realdistance - approxdistance)
+```
+
+### SVD Exercises #5
+
+What is the minium number of dimensions we need to use for the approximation in SVD Exercises #4 to be within 10% or less?
+
+```{r}
+ks = 1:189
+realdistance = sqrt(crossprod(e[,3]-e[,45]))
+approxdistances = sapply(ks,function(k){
+    sqrt(crossprod(z[1:k,3,drop=FALSE]-z[1:k,45,drop=FALSE] )) 
+  })
+percentdiff = 100*abs(approxdistances - realdistance)/realdistance
+plot(ks,percentdiff) ##take a look
+min(ks[which(percentdiff < 10)])
+```
+
+### SVD Exercises #6
+
+Compute distances between sample 3 and all other samples:
+
+```{r}
+distances = sqrt(apply(e[,-3]-e[,3],2,crossprod))
+```
+
+Recompute this distance using the 2 dimensional approximation.
+
+What is the Spearman correlation between this approximate distance and the actual distance?
+
+```{r}
+approxdistances = sqrt(apply(z[1:2,-3]-z[1:2,3],2,crossprod))
+plot(distances,approxdistances) ##take a look
+cor(distances,approxdistances,method="spearman")
+```
+
+## MDS Exercises
+
+For the following queesions use the data loaded with:
+
+```{r}
+library(tissuesGeneExpression)
+data(tissuesGeneExpression)
+```
+
+### MDS Exercises #1
+
+In these exercise we will demonstrate the relantionship between the SVD and the output of mdscale, the function in R that performs MDS.
+
+Using the z we computed in SVD Exercises #4
+
+```{r}
+y = e - rowMeans(e)
+s = svd(y)
+z = s$d * t(s$v)
+```
+
+we can make an mds plot
+
+```{r}
+library(rafalib)
+ftissue = factor(tissue)
+mypar(1,1)
+plot(z[1,],z[2,],col=as.numeric(ftissue))
+legend("topleft",levels(ftissue),col=seq_along(ftissue),pch=1)
+```
+
+Now run the function cmdscale on the original data
+
+```{r}
+d = dist(t(e))
+mds = cmdscale(d)
+```
+
+What is the correlation between the first row of z and the first column in mds?
+
+```{r}
+cor(z[1,],mds[,1])
+```
+
+### MDS Exercises #2
+
+What is the correlation between the second row of z and the second column od mds?
+
+```{r}
+cor(z[2,],mds[,2])
+```
+
+### MDS Exercises #3
+
+Note that the mds plot is not the same:
+
+```{r}
+library(rafalib)
+ftissue = factor(tissue)
+mypar(1,2)
+plot(z[1,],z[2,],col=as.numeric(ftissue))
+legend("topleft",levels(ftissue),col=seq_along(ftissue),pch=1)
+plot(mds[,1],mds[,2],col=as.numeric(ftissue))
+```
+
+Given the answer to MDS Exercises #1, what do we have to do to z[1,] and z[2,] to get a practically identical plot?
+
+
+- It is impossible
+- Use the columns instead z[,1] and z[,2]
+- Remove the row means from e before computing the distance
+- **multiply z[1,] and z[2,] by -1**
+
+### MDS Exercises #4
+
+Load the following dataset
+
+```{r}
+library(GSE5859Subset)
+data(GSE5859Subset)
+```  
+  
+Compute the svd and compute z
+
+```{r}
+s = svd(geneExpression-rowMeans(geneExpression))
+z = s$d * t(s$v)
+```
+
+Which dimension of z most correlates with the outcome sampleInfo$group?
+
+```{r}
+which.max(cor(sampleInfo$g,t(z)))
+```
+
+### MDS Exercises #5
+
+Load the following dataset
+
+```{r}
+library(GSE5859Subset)
+data(GSE5859Subset)
+```
+  
+Compute the svd and compute z
+
+```{r}
+s = svd(geneExpression-rowMeans(geneExpression))
+z = s$d * t(s$v)
+```
+
+What is this max correlation?
+
+```{r}
+max(cor(sampleInfo$g,t(z)))
+```
+
+### MDS Exercises #6
+
+Load the following dataset
+
+```{r}
+library(GSE5859Subset)
+data(GSE5859Subset)
+```
+
+Compute the svd and compute z
+
+```{r}
+s = svd(geneExpression-rowMeans(geneExpression))
+z = s$d * t(s$v)
+```
+
+Which dimension of z has the second highest correlates with the outcome sampleInfo$group?
+  
+```{r}
+which.max(cor(sampleInfo$g,t(z))[-1]) + 1
+```
+
+### MDS Exercises #7
+
+Note these measurements were made during two months:
+
+```{r}
+sampleInfo$date
+```
+
+We can extract the month this way:
+
+```{r}
+month = format( sampleInfo$date, "%m")
+month = factor( month)
+```
+
+Which dimension of z has the highest correlates with the outcome month
+
+```{r}
+which.max(cor( as.numeric(month), t(z)))
+```
+
+What is this correlation?
+  
+```{r}
+max(cor( as.numeric(month), t(z)))
+table(sampleInfo$g,month)
+```
+
+### MDS Exercises #8 (ADVANCED)
+
+Note: this is an advanced question. Please feel free to discuss on the forum.
+
+In MDS Exercises #7 we saw that that one of the dimensions was highly correlated to the sampleInfo$group. Now take the 5th column of $\ U$ and stratify by the gene chromosome. Remove chrUn and make a boxplot of the values of $\ U_6$ stratified by chromosome.
+
+Which chromosome looks different from the rest? Copy and paste the name as it appears in geneAnnotation
+
+```{r}
+result = split(s$u[,6],geneAnnotation$CHR)
+result = result[ which(names(result)!="chrUn") ]
+boxplot(result,range=0)
+boxplot(result,range=0,ylim=c(-0.025,0.025))
+medians = sapply(result,median)
+names(result)[ which.max(abs(medians)) ]
+```

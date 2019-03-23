@@ -1,0 +1,297 @@
+---
+title: "Homework 06 - Interactions and Contrasts"
+author: "Alessandro Corradini - Harvard Data Science for Life Science XSeries"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Contrasts Exercises
+
+Remember, you can check the book page for contrasts here.
+
+Suppose we have an experiment with two species A and B, and two conditions: control and treated.
+
+```{r}
+species <- factor(c("A","A","B","B"))
+condition <- factor(c("control","treated","control","treated"))
+```
+
+And we will use a formula of '~ species + condition'.
+
+The model matrix is then:
+
+```{r}
+model.matrix(~ species + condition)
+```
+
+### Contrasts Exercises #1
+
+Suppose we want to build a contrast of coefficients for the above experimental design.
+
+You can either figure this question out through logic, by looking at the design matrix, or using the contrast() function from the contrast library. If you have not done so already, you should download the contrast library. The contrast vector is returned as contrast(...)$X.
+
+What should the contrast vector be, for the contrast of (species=B and condition=control) vs (species=A and condition=treatment)? Assume that the beta vector from the model fit by R is: Intercept, speciesB, conditiontreated.
+
+```{r}
+library(contrast)
+y = rnorm(4)
+
+fit = lm(y ~ species + condition)
+
+contrast(fit, list(species="B",condition="control"), list(species="A",condition="treated"))$X
+```
+
+- 0 0 1
+- 0 -1 0
+- 0 1 1
+- **0 1 -1**
+- 0 -1 1
+- 1 0 1
+
+### Contrasts Exercises #2
+
+Load the spider dataset like this:
+
+```{r}
+url <- "https://raw.githubusercontent.com/genomicsclass/dagdata/master/inst/extdata/spider_wolff_gorb_2013.csv"
+filename <- "spider_wolff_gorb_2013.csv"
+library(downloader)
+if (!file.exists(filename)) download(url, filename)
+spider <- read.csv(filename, skip=1)
+```
+
+Use the Rmd script of the spider dataset. Suppose we build a model using two variables: ~ type + leg.
+
+What is the t-value for the contrast of leg pair L4 vs leg pair L2?
+
+```{r}
+fitTL <- lm(friction~type+leg, data=spider)
+L4vsL2 <- contrast(fitTL, list(leg="L4",type="pull"), list(leg="L2",type="pull"))
+```
+
+The t-value for the contrast of leg pair L4 vs leg pair L2 is constructed by taking the difference of the coefficients legL4 and legL2, and then dividing by the standard error of the difference. In the last question we will explore how the standard error of the difference is calculated here.
+
+In the book page for contrasts (see the heading, Contrasting the coefficients), we saw that in general, for a contrast vector C, the standard error of the contrast ($\ \mathbf{C} \hat{\boldsymbol{\beta} }$) is:
+
+$\ \sqrt {\mathbf{C} \boldsymbol {\Sigma } \mathbf{C}^ T}$
+
+Sigma, , is the covariance matrix of beta-hat, . The covariance matrix contains elements which give the variance or covariance of elements in beta-hat. The elements on the diagonal of the Sigma matrix give the variance of each element in beta-hat. The square root of these is the standard error of the elements in beta-hat. The off-diagonal elements of Sigma give the covariance of two different elements of the beta-hat matrix. So Sigma[1,2] gives the covariance of the first and second element of beta-hat. The Sigma matrix is symmetric, which means Sigma[i,j] = Sigma[j,i].
+
+But we can also work out in this simple case, where we simply subtract one coefficient from another, using the formula for the variance of sums of random variables:
+
+$\ Var(\hat{\beta }_{L4} - \hat{\beta }_{L2}) = Var(\hat{\beta }_{L4}) + Var(\hat{\beta }_{L2}) - 2 Cov(\hat{\beta }_{L4}, \hat{\beta }_{L2})$
+
+In the book page, we computed Sigma using:
+
+```{r}
+X <- model.matrix(~ type + leg, data=spider)
+(Sigma <- sum(fitTL$residuals^2)/(nrow(X) - ncol(X)) * solve(t(X) %*% X))
+```
+Our contrast matrix is:
+
+```{r}
+C <- matrix(c(0,0,-1,0,1),1,5)
+```
+
+### Contrasts Exercises #3
+
+Using Sigma, what is Cov(beta-hat_L4, beta-hat_L2)?
+
+```{r}
+Sigma[3,5]
+```
+Confirm that 
+
+```
+sqrt(Var(beta-hat_L4 - beta-hat_L2)) = sqrt(Var(beta-hat_L4) + Var(beta-hat_L2) - 2 Cov(beta-hat_L4, beta-hat_L2))
+```
+is equal to
+
+```
+sqrt(C %*% Sigma %*% t(C))
+```
+
+## Interactions Exercises
+
+Remember, you can check the book page for interactions and contrasts here.
+
+Start by loading the spider dataset:
+
+```{r}
+url <- "https://raw.githubusercontent.com/genomicsclass/dagdata/master/inst/extdata/spider_wolff_gorb_2013.csv"
+filename <- "spider_wolff_gorb_2013.csv"
+library(downloader)
+if (!file.exists(filename)) download(url, filename)
+spider <- read.csv(filename, skip=1)
+```
+Suppose that we notice that the within-group variances for the groups with smaller frictional coefficients are generally smaller, and so we try to apply a transformation to the frictional coefficients to make the within-group variances more constant.
+
+Add a new variable log2friction to the spider dataframe:
+
+```{r}
+spider$log2friction <- log2(spider$friction)
+```
+
+The 'Y' values now look like:
+
+```{r}
+boxplot(log2friction ~ type*leg, data=spider)
+```
+
+Run a linear model of log2friction with type, leg and interactions between type and leg.
+
+### Interactions Exercises #1
+
+What is the t-value for the interaction of type push and leg L4? If this t-value is sufficiently large, we would reject the null hypothesis that the push vs pull effect on log2(friction) is the same in L4 as in L1.
+
+```{r}
+fit = lm(log2friction ~ type + leg + type:leg, data=spider)
+
+summary(fit)
+```
+
+### Interactions Exercises #2
+
+What is the F-value for all of the type:leg interaction terms, in an analysis of variance? If this value is sufficiently large, we would reject the null hypothesis that the push vs pull effect on log2(friction) is the same for all leg pairs.
+
+```{r}
+fit = lm(log2friction ~ type + leg + type:leg, data=spider)
+
+anova(fit)
+```
+
+### Interactions Exercises #3
+
+What is the L2 vs L1 estimate in log2friction for the pull samples?
+
+```{r}
+contrast(fit, list(type="pull",leg="L2"), list(type="pull",leg="L1"))
+coef(fit)["legL2"]
+```
+
+### Interactions Exercises #4
+
+What is the L2 vs L1 estimate in log2friction for the push samples? Remember, because of the interaction terms, this is not the same as the L2 vs L1 difference for the pull samples. If you're not sure use the contrast() function. Another hint: consider the arrows plot for the model with interactions.
+
+```{r}
+contrast(fit, list(type="push",leg="L2"), list(type="push",leg="L1"))
+coef(fit)["legL2"] + coef(fit)["typepush:legL2"]
+```
+
+Note that taking the log2 of a Y value and then performing a linear model has a meaningful effect on the coefficients. If we have,
+
+log2(Y_1) = beta_0
+
+and
+
+log2(Y_2) = beta_0 + beta_1
+
+Then Y_2/Y_1 = 2^(beta_0 + beta_1) / 2^(beta_0)
+
+= 2^beta_1
+
+So beta_1 represents a log2 fold change of Y_2 over Y_1. If beta_1 = 1, then Y_2 is 2 times Y_1. If beta_1 = -1, then Y_2 is half of Y_1, etc.
+
+In the video we briefly mentioned the analysis of variance (or ANOVA, performed in R using the anova() function), which allows us to test whether a number of coefficients are equal to zero, by comparing a linear model including these terms to a linear model where these terms are set to 0.
+
+The book page for this section has a section, "Testing all differences of differences", which explains the ANOVA concept and the F-test in some more detail. You can read over that section before or after the following question.
+
+In this last question, we will use Monte Carlo techniques to observe the distribution of the ANOVA's "F-value" under the null hypothesis, that there are no differences between groups.
+
+Suppose we have 4 groups, and 10 samples per group, so 40 samples overall:
+
+```{r}
+N <- 40
+p <- 4
+group <- factor(rep(1:p,each=N/p))
+X <- model.matrix(~ group)
+```
+
+We will show here how to calculate the "F-value", and then we will use random number to observe the distribution of the F-value under the null hypothesis.
+
+The F-value is the mean sum of squares explained by the terms of interest (in our case, the 'group' terms) divided by the mean sum of squares of the residuals of a model including the terms of interest. So it is the explanatory power of the terms divided by the leftover variance.
+
+Intuitively, if this number is large, it means that the group variable explains a lot of the variance in the data, compared to the amount of variance left in the data after using group information. We will calculate these values exactly here:
+
+First generate some random, null data, where the mean is the same for all groups:
+
+```{r}
+Y <- rnorm(N,mean=42,7)
+```
+
+The base model we wil compare against is simply Y-hat = mean(Y), which we will call mu0, and the initial sum of squares is the Y values minus mu0:
+
+```{r}
+mu0 <- mean(Y)
+initial.ss <- sum((Y - mu0)^2)
+```
+
+We then need to calculate the fitted values for each group, which is simply the mean of each group, and the residuals from this model, which we will call "after.group.ss" for the sum of squares after using the group information:
+
+```{r}
+s <- split(Y, group)
+after.group.ss <- sum(sapply(s, function(x) sum((x - mean(x))^2)))
+```
+
+Then the explanatory power of the group variable is the initial sum of squares minus the residual sum of squares:
+
+```{r}
+(group.ss <- initial.ss - after.group.ss)
+```
+
+We calculate the mean of these values, but we divide by terms which remove the number of fitted parameters. For the group sum of squares, this is number of parameters used to fit the groups (3, because the intercept is in the initial model). For the after group sum of squares, this is the number of samples minus the number of parameters total (So N - 4, including the intercept).
+
+```{r}
+group.ms <- group.ss / (p - 1)
+after.group.ms <- after.group.ss / (N - p)
+```
+
+The F-value is simply the ratio of these mean sum of squares.
+
+```{r}
+f.value <- group.ms / after.group.ms
+```
+
+What's the point of all these calculations? The point is that, after following these steps, the exact distribution of the F-value has a nice mathematical formula under the null hypothesis. We will see this below.
+
+### Interactions Exercises #5
+
+Set the seed to 1, set.seed(1) then calculate the F-value for 1000 random versions of Y. What is the mean of these F-values?
+
+```{r}
+set.seed(1)
+Fs = replicate(1000, {
+  Y = rnorm(N,mean=42,7)
+  mu0 = mean(Y)
+  initial.ss = sum((Y - mu0)^2)
+  s = split(Y, group)
+  after.group.ss = sum(sapply(s, function(x) sum((x - mean(x))^2)))
+  (group.ss = initial.ss - after.group.ss)
+  group.ms = group.ss / (p - 1)
+  after.group.ms = after.group.ss / (N - p)
+  f.value = group.ms / after.group.ms
+  return(f.value)
+})
+mean(Fs)
+```
+
+Plot the distribution of the 1000 F-values:
+```{r}
+hist(Fs, col="grey", border="white", breaks=50, freq=FALSE)
+```
+
+Overlay the theoretical F-distribution, with parameters df1=p - 1, df2=N - p.
+
+```
+xs <- seq(from=0,to=6,length=100)
+lines(xs, df(xs, df1 = p - 1, df2 = N - p), col="red")
+```
+
+This is the distribution which is used to calculate the p-values for the ANOVA table produced by anova(). 
+
+is equal to the standard error from the contrast() for the leg L4 vs L2 difference.

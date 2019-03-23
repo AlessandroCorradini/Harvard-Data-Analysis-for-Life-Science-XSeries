@@ -1,0 +1,83 @@
+---
+title: "Homework 05 - Exploratory Data Analysis"
+author: "Alessandro Corradini - Harvard Data Science for Life Science XSeries"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Plots Exercises
+
+Plots Exercises #1
+
+Download and install the Bioconductor package SpikeInSubset and then load the library and the mas133 data
+
+```{r}
+source("http://www.bioconductor.org/biocLite.R")
+biocLite("SpikeInSubset")
+library(SpikeInSubset)
+data(mas133)
+```
+
+Now make the following plot of the first two samples and compute the correlation:
+
+```{r}
+e <- exprs(mas133)
+plot(e[,1],e[,2],main=paste0("corr=",signif(cor(e[,1],e[,2]),3)),cex=0.5)
+k <- 3000
+b <- 1000 #a buffer
+polygon(c(-b,k,k,-b),c(-b,-b,k,k),col="red",density=0,border="red")
+```
+
+What proportion of the points are inside the box?
+
+```{r}
+mean(e[,1]<k & e[,2]<k)
+```
+
+### Plots Exercises #2
+
+Now make the sample plot with log:
+
+```{r}
+plot(log2(e[,1]),log2(e[,2]),main=paste0("corr=",signif(cor(log2(e[,1]),log2(e[,2])),2)),cex=0.5)
+k <- log2(3000)
+b <- log2(0.5)
+polygon(c(b,k,k,b),c(b,b,k,k),col="red",density=0,border="red")
+```
+
+What is an advantage of taking the log?
+
+- **The tails do not dominate the plot.**
+- There are less points.
+- There is exponential growth.
+- We always take logs.
+
+### Plots Exercises #3
+
+Make an MA-plot
+
+```{r}
+e <- log2(exprs(mas133))
+plot((e[,1]+e[,2])/2,e[,2]-e[,1],cex=0.5)
+```
+
+The two samples we are plotting are replicates (they random samples fro the same batch of RNA) The correlation of the data was 0.997 in the original scale, 0.96 in the log-scale. High correlations are sometimes confused for evidence of replication. But replication implies we get very small difference between the observations which is better measured with distance or differences.
+
+What is the standard deviation of the log ratios for this comparison?
+
+```{r}
+sd(e[,2]-e[,1])
+```
+
+### Plots Exercises #4
+
+How many fold changes above 2 do we see? Note that these measures of log (base 2) of expression so a fold change of 2 translates into a difference, in absolute value, of 1.
+
+```{r}
+sum(abs(e[,2]-e[,1])>1)
+```

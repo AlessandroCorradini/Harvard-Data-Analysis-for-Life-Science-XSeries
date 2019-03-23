@@ -1,0 +1,264 @@
+---
+layout: page
+title: A few quick examples of genome-scale data with Bioconductor
+---
+
+```{r options, echo=FALSE}
+library(knitr)
+opts_chunk$set(fig.path=paste0("figure/", sub("(.*).Rmd","\\1",basename(knitr:::knit_concord$get('infile'))), "-"))
+```
+
+```{r setup,echo=FALSE,results="hide"}
+suppressWarnings({
+suppressPackageStartupMessages({
+library(Biobase)
+library(GSE5859)
+library(annotate)
+library(BiocParallel)
+library(VariantAnnotation)
+library(BSgenome.Hsapiens.UCSC.hg19)
+library(RNAseqData.HNRNPC.bam.chr14)
+})
+})
+```
+
+
+```{r setup2,echo=FALSE,results="hide"}
+suppressMessages({
+suppressWarnings({
+suppressPackageStartupMessages({
+library(png)
+library(grid)
+library(Homo.sapiens)
+library(GenomicRanges)
+library(BSgenome.Hsapiens.UCSC.hg19)
+library(GenomicAlignments)
+library(Rsamtools)
+library(ggbio)
+library(ph525x)
+})
+})
+})
+```
+
+<!--
+# Basic premise and overview of 5x
+
+You know to manipulate and analyze data using R, and
+you understand a considerable amount about statistical modeling.
+The Bioconductor project demonstrates that R is an effective
+vehicle for performing many -- but not all -- tasks that
+arise in genome-scale computational biology.
+
+Some of the fundamental concepts that distinguish Bioconductor from other
+software systems addressing genome-scale data are
+
+* use of object-oriented design concepts to unify disparate data types arising in genomic experiments;
+* commitment to interoperable structures for genomic annotation, from nucleotide to population scale;
+* continuous integration discipline for release and development cycles, withdaily testing on multiple widely used compute platforms.
+The purpose of this four-week module is to build appreciation for and
+expertise in the use of this system for many aspects of genome scale
+data analysis.
+
+This module, 525.5x, breaks into four main pieces, with one week 
+devoted to each of
+
+* Motivation and techniques: what we measure and why, and how we manage the measurements with R
+* Genomic annotation, with particular attention to the role of ranges in genomic coordinates in identifying genomic structures
+* Preprocessing concepts for genome scale data, focusing on implementations in Bioconductor
+* Testing genome-scale hypotheses with Bioconductor
+
+Subsections of this chapter will sketch the concepts to
+be covered, along with some illustrative computations.
+
+-->
+
+## Motivation and techniques
+
+The videos in "What we measure and why" provide schematic
+illustrations of the basic biological processes that can now
+be studied computationally.  We noted that recipes for
+all the proteins that are
+fundamental to life processes of an organism are coded
+in the organism's genomic DNA.  Studies of differences
+between organisms, and certain changes within organisms (for
+example, development of tumors), often rely on computations involving 
+genomic DNA sequence.  
+
+Bioconductor provides tools for working
+directly with genomic DNA sequence for many organisms.  
+One basic approach uses computations on a "reference sequence",
+another focuses on differences between the genomic sequence
+of a given individual, and the reference.
+
+<a name="referseq"></a>
+
+### Reference sequence access
+
+
+It is very easy to use Bioconductor to work with the
+reference sequence for _Homo sapiens_.
+Here we'll have a look at chromosome 17.
+```{r lkhs}
+library(BSgenome.Hsapiens.UCSC.hg19)
+Hsapiens$chr17
+```
+Of note:
+
+* the sequence is provided through an R package
+* the name of the package indicates the curating source (UCSC) and reference version (hg19)
+* familiar R syntax `$` for selecting a list element is reused to select a chromosome
+
+<a name="dnavar"></a>
+
+### Representing DNA variants
+
+A standard representation for individual departures from reference sequence
+is [Variant Call Format](http://samtools.github.io/hts-specs/VCFv4.1.pdf).
+The `VariantAnnotation` package includes an example.  We have two
+high-level representations of some DNA variants -- a summary of the
+VCF content in the example, and the genomic addresses of
+the sequence variants themselves.
+
+```{r lkv}
+fl <- system.file("extdata", "ex2.vcf", package="VariantAnnotation") 
+vcf <- readVcf(fl, "hg19")
+vcf
+rowRanges(vcf)
+```
+
+Of note:
+
+* the example data are "built-in" to the package, for illustration and testing
+* the variable `vcf` has a concise display to the user
+* the variant locations, extracted using `rowRanges`, are shown with a tag indicating their context in the hg19 reference build
+
+<a name="yeastcc"></a>
+
+### Measures of gene expression: microarrays elucidate the transcriptional program of the cell cycle in yeast
+
+A highly influential
+experiment 
+(Spellman PT et al., Mol. Biol. Cell v9, 1998, PMID 9843569)
+undertook to use genome-wide measurement of mRNA abundance
+over a series of time points in the reproductive cycle of
+_Sacchomyces cerevisiae_, baker's yeast.  
+Again
+we use an R package to manage the data, and we use a special
+Bioconductor-defined data structure to provide access to
+information about the experiment and the results.
+
+```{r lkycc}
+library(yeastCC)
+data(spYCCES)
+spYCCES
+experimentData(spYCCES)
+```
+After a bit of massaging, a topic on which you will become expert
+in the next few weeks, we can visualize the time course of a
+cell-cycle regulated gene.
+
+```{r lkycc2, fig=TRUE,echo=FALSE}
+alp = spYCCES[, spYCCES$syncmeth=="alpha"]
+with(pData(alp), {
+  plot(exprs(alp)["YAR007C",]~time, ylab="YAR007C expression",
+   xlab="minutes from alpha synchronization")
+  lines(exprs(alp)["YAR007C",]~time, lty=2)
+})
+```
+
+Of note:
+
+* Informative metadata about the experiment are bound right to the data (pubmed ID and abstract accessible through `experimentData`)
+* Simple syntax can be used to select components of complex experimental designs; in this case `spYCCES[, spYCCES$syncmeth=="alpha"]` picks out just the colonies whose cell cycling was controlled using alpha pheromone
+* R's plotting tools support general plot annotation and enhancement
+* Statistical modeling tools to help distinguish cycling and non-cycling genes can be used immediately 
+
+<a name="rnaseq"></a>
+
+### Measuring gene expression with RNA-seq
+
+A 2013 paper of [Zarnack and colleagues](http://dx.doi.org/10.1016/j.cell.2012.12.023)
+studies the role of the heterogeneous nuclear ribonucleoproteins C1 and C2
+(coded for by gene HNRNPC) in the prevention of inclusion of cryptic Alu elements
+in spliced transcripts.  One part of the study involves knockdown of HNRNPC
+in HeLa cells, followed by genome-wide observation of frequency of cryptic Alu element
+inclusion.  
+
+The Bioconductor package `RNAseqData.HNRNPC.bam.chr14` includes an extract
+from the RNA-seq data generated in this study.  There are 8 BAM files that have
+been filtered and indexed to include information on mRNA molecules mapped
+to the sequence of chromosome 14.  The protocol creates "paired-end" reads.
+We can have a quick look at the short reads of mRNA sequence as follows:
+
+```{r getlibs}
+library(RNAseqData.HNRNPC.bam.chr14)
+library(GenomicAlignments)
+bf1 = RNAseqData.HNRNPC.bam.chr14_BAMFILES[1] # first of 8 files in package
+r1 = readGappedReads(bf1)
+r1[1:5]
+qseq(r1[1:5])
+```
+
+We can demonstrate the detectability of mRNA coded for by HNRNPC
+using the plotting package `ggbio`.  We use our knowledge of the location
+of the gene to set up a scanning parameter to focus the data extract.
+```{r domo,fig=TRUE,fig.height=4}
+library(Rsamtools)
+library(ggbio)
+hnrnpc_param = 
+   ScanBamParam(which=GRanges("chr14", IRanges(21.67e6,21.74e6)))
+limr1 = readGappedReads(bf1, param=hnrnpc_param, use.names=TRUE)
+autoplot(limr1, geom="line", stat="coverage") + ylim(0,900)
+```
+
+In exercises you will verify that the knockdown experiment succeeded.
+
+<!--
+pr1 = readGAlignmentPairs(bf1, param=ScanBamParam(what="seq"))
+-->
+
+## Wrap-up
+
+You're about to engage with a few high-level lectures on genome
+structures and molecular biological techniques for measuring them.
+As you encounter these concepts, keep in mind what sorts of computations
+you consider relevant to understanding the structures and processes
+being studied.  Find the tools to perform these
+computations in Bioconductor, and become expert in their
+use.  And if you don't find them, let us know, and perhaps we
+can point them out, or, if they don't exist, build them together.
+
+
+<!--
+
+Week 1. Overview of Bioconductor: Channeling R for genome-scale data  
+
+ A. What we measure and why videos with exercises
+ B. Bioconductor overview: Software, Annotation, Experimental data packages
+ C. Brief overview of object-oriented programming and S4
+ D. Managing genome-scale data: ExpressionSet, SummarizedExperiment with exercises
+
+
+Week 2. Genomic annotation with Bioconductor
+ 
+ A. Prologue: Genomic ranges with exercises
+ B. Structural annotation: reference genomic sequence, genes, transcripts with exercises
+ C. Assay annotation: microarray platforms with exercises 
+ D. Functional annotation: Gene ontology, KEGG, AnnotationHub with exercises
+
+Week 3. Preprocessing genome-scale data with Bioconductor
+ 
+ A. Microarray import and quality assessment with exercises
+ B. Short-read import and quality assessment with exercises
+ C. Background correction and normalization for microarrays
+ D. Bias-correction and normalization for RNA-seq
+
+Week 4. Testing biological hypotheses with Bioconductor
+
+ A. Two-sample tests for differential expression with exercises
+ B. Regression and other structured models for gene-specific hypotheses
+ C. Modeling with adjustments for confounders
+ D. Gene set enrichment analysis
+
+-->

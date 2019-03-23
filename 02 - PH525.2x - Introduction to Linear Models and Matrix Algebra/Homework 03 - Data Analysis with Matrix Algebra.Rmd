@@ -1,0 +1,101 @@
+---
+title: "Homework 03 - Data Analysis with Matrix Algebra"
+author: "Alessandro Corradini - Harvard Data Science for Life Science XSeries"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Matrix Algebra Examples Exercises
+
+Suppose we are analyzing a set of 4 samples. The first two samples are from a treatment group A and the second two samples are from a treatment group B. This design can be represented with a model matrix like so:
+
+```{r}
+X <- matrix(c(1,1,1,1,0,0,1,1),nrow=4)
+rownames(X) <- c("a","a","b","b")
+```
+
+X will then look like:
+
+```
+a 1 0
+a 1 0
+b 1 1
+b 1 1
+```
+
+Suppose that the fitted parameters for a linear model give us:
+
+```{r}
+beta <- c(5, 2)
+```
+
+Use the matrix multiplication operator, %*%, in R to answer the following questions:
+
+### Matrix Algebra Examples Exercises #1
+
+What is the fitted value for the A samples? (The fitted Y values.)
+
+```{r}
+fitted = X %*% beta
+
+fitted[ 1:2, ]
+```
+
+### Matrix Algebra Examples Exercises #2
+
+What is the fitted value for the B samples? (The fitted Y values.)
+
+```{r}
+fitted = X %*% beta
+
+fitted[ 3:4, ]
+```
+
+Suppose now we are comparing two treatments B and C to a control group A, each with two samples. This design can be represented with a model matrix like so:
+
+```{r}
+X <- matrix(c(1,1,1,1,1,1,0,0,1,1,0,0,0,0,0,0,1,1),nrow=6)
+rownames(X) <- c("a","a","b","b","c","c")
+```
+
+which results in a matrix that looks like
+
+```
+a 1 0 0
+a 1 0 0
+b 1 1 0
+b 1 1 0
+c 1 0 1
+c 1 0 1
+```
+
+Suppose that the fitted values for the linear model are given by:
+
+```{r}
+beta <- c(10,3,-3)
+```
+
+### Matrix Algebra Examples Exercises #3
+
+What is the fitted value for the B samples?
+
+```{r}
+fitted = X %*% beta
+
+fitted[ 3:4, ]
+```
+
+#### Matrix Algebra Examples Exercises #4
+
+What is the fitted value for the C samples?
+
+```{r}
+fitted = X %*% beta
+
+fitted[ 5:6, ]
+```

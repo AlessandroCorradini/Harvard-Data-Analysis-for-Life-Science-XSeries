@@ -1,0 +1,131 @@
+---
+title: "Homework 02 - Introduction to Matrix Albera"
+author: "Alessandro Corradini - Harvard Data Science for Life Science XSeries"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Matrix Notation Exercises
+
+### Matrix Notation Exercises #1
+
+In R we have vectors and matrices. You can create your own vectors with the function c.
+
+```{r}
+c(1,5,3,4)
+```
+
+They are also the output of many functions such as
+
+```{r}
+rnorm(10)
+```
+
+You can turn vectors into matrices using functions such as rbind, cbind or matrix.
+
+Create the matrix from the vector 1:1000 like this:
+
+```{r}
+X = matrix(1:1000,100,10)
+```
+
+What is the entry in row 25, column 3 ?
+
+```{r}
+X[25,3]
+```
+
+
+### Matrix Notation Exercises #2
+
+Using the function cbind, create a 10 x 5 matrix with first column x=1:10. Then columns 2*x, 3*x, 4*x and 5*x in columns 2 through 5.
+
+What is the sum of the elements of the 7th row?
+
+```{r}
+x = 1:10
+
+X=cbind(x, 2*x, 3*x, 4*x, 5*x)
+
+sum(X[7,])
+```
+### Matrix Notation Exercises #3
+
+Which of the following creates a matrix with multiples of 3 in the third column?
+
+- matrix(1:60,20,3)
+- **matrix(1:60,20,3,byrow=TRUE)**
+- x=11:20;rbind(x,2*x,3*x)
+- x=1:40;matrix(3*x,20,2)
+
+
+## Matrix Operation Exercises
+
+### Matrix Operation Exercises #1
+Suppose X is a matrix in R. Which of the following is NOT equivalent to X?
+
+
+- t( t(X) )
+- **X %*% matrix(1,ncol(X) )**
+- X*1
+- X%*%diag(ncol(X))
+
+### Matrix Operation Exercises #2
+
+Solve the following system of equations using R:
+
+3a + 4b - 5c + d = 10
+
+2a + 2b + 2c - d = 5
+
+a -b + 5c - 5d = 7
+
+5a + d = 4
+
+What is the solution for c:
+
+```{R}
+X = matrix(c(3,2,1,5,4,2,-1,0,-5,2,5,0,1,-1,-5,1),4,4)
+
+y = c(10,5,7,4)
+
+sol = solve(X,y)
+
+sol[ 3 ]
+```
+
+Load the following two matrices into R:
+
+```{r}
+a <- matrix(1:12, nrow=4)
+b <- matrix(1:15, nrow=3)
+```
+
+Note the dimension of 'a' and the dimension of 'b'.
+
+In the question below, we will use the matrix multiplication operator in R, %*%, to multiply these two matrices.
+
+### Matrix Operation Exercises #3
+
+What is the value in the 3rd row and the 2nd column of the matrix product of 'a' and 'b'
+
+```{r}
+d = a %*% b
+
+d[ 3,2 ]
+```
+
+### Matrix Operation Exercises #4
+
+Multiply the 3rd row of 'a' with the 2nd column of 'b', using the element-wise vector multiplication with *.
+
+What is the sum of the elements in the resulting vector?
+
+```{r}
+sum(a[ 3, ] * b[ ,2 ])
+```

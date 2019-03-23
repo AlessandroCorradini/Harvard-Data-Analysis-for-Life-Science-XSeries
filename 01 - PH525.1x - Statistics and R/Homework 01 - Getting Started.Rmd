@@ -1,0 +1,226 @@
+---
+title: "Homework 01 - Getting Started"
+author: "Alessandro Corradini - Harvard Data Science for Life Science XSeries"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## First assessment: Run swirl Exercises
+
+If you have not done so already, download, install and load the swirl package.
+
+```{r}
+## install.packages("swirl")
+library(swirl)
+```
+
+Go through the R Programming Basic Building Blocks tutorial and then use the skills you have just learned to answer the following questions.
+
+
+### Run swirl Exercises #2
+
+Create a numeric vector containing the numbers 2.23, 3.45, 1.87, 2.11, 7.33, 18.34, 19.23. What is the average of these numbers?
+
+```{r}
+x <- c(2.23, 3.45, 1.87, 2.11, 7.33, 18.34, 19.23)
+mean(x)
+```
+
+### Run swirl Exercises #3
+
+Use a for loop to determine the value of $\ \sum_{i=1}^{25} i^2$
+
+```{r}
+sum <- 0
+for(i in 1:25)
+  sum <- sum + i^2
+sum
+```
+
+### Run swirl Exercises #4
+
+The cars dataset is available in base R. You can type cars to see it. Use the class function to determine what type of object is cars.
+
+```{r}
+class(cars)
+```
+ 
+
+### Run swirl Exercises #5
+
+How many rows does the cars object have?
+
+```{r}
+nrow(cars)
+```
+ 
+
+### Run swirl Exercises #6
+
+What is the name of the second column of cars?
+
+```{r}
+names(cars)[2]
+```
+
+### Run swirl Exercises #7
+
+The simplest way to extract the columns of a matrix or data.frame is using [. For example you can access the second column with cars[,2]. What is the average distance traveled in this dataset?
+
+```{r}
+mean(cars[,2])
+```
+
+### Run swirl Exercises #8
+
+Familiarize yourself with the which function. What row of cars has a a distance of 85?
+
+```{r}
+which(cars[,2]==85)
+```
+
+## Getting Started Exercises
+
+Here we will test some of the basics of R data manipulation which you should know or should have learned by following the tutorials above. You will need to have the file femaleMiceWeights.csv in your working directory. As we showed above, one way to do this is by using the downloader package:
+
+```{r}
+# install.packages("downloader")
+library(downloader) 
+url <- "https://raw.githubusercontent.com/genomicsclass/dagdata/master/inst/extdata/femaleMiceWeights.csv"
+filename <- "femaleMiceWeights.csv" 
+download(url, destfile=filename)
+```
+
+### Getting Started Exercises #1
+
+Read in the file femaleMiceWeights.csv and report the exact name of the column containing the weights.
+
+```{r}
+dat <- read.csv("femaleMiceWeights.csv")
+head(dat) 
+```
+
+### Getting Started Exercises #2
+
+The [ and ] symbols can be used to extract specific rows and specific columns of the table. What is the entry in the 12th row and second column?
+
+```{r}
+dat[12,2]
+```
+
+###  Getting Started Exercises #3
+
+You should have learned how to use the $ character to extract a column from a table and return it as a vector. Use $ to extract the weight column and report the weight of the mouse in the 11th row.
+
+```{r}
+weights <- dat$Bodyweight
+weights[11]
+```
+
+### Getting Started Exercises #4
+
+The length function returns the number of elements in a vector. How many mice are included in our dataset?
+
+```{r}
+weights <- dat$Bodyweight
+length(weights)
+```
+
+### Getting Started Exercises #5
+
+To create a vector with the numbers 3 to 7, we can use seq(3,7) or, because they are consecutive, 3:7. View the data and determine what rows are associated with the high fat or hf diet. Then use the mean function to compute the average weight of these mice.
+
+```{r}
+View(dat) 
+weights <- dat$Bodyweight
+mean( weights[ 13:24 ])
+```
+
+### Getting Started Exercises #6
+
+One of the functions we will be using often is sample. Read the help file for sample using ?sample. Now take a random sample of size 1 from the numbers 13 to 24 and report back the weight of the mouse represented by that row. Make sure to type set.seed(1) to ensure that everybody gets the same answer.
+
+```{r}
+set.seed(1)
+i <- sample( 13:24, 1)
+dat$Bodyweight[i]
+```
+
+## dplyr Exercises
+
+For these exercises, we will use a new dataset related to mammalian sleep. This link describes the data. Download the CSV file from this location:
+
+```{r}
+library(downloader)
+url="https://raw.githubusercontent.com/genomicsclass/dagdata/master/inst/extdata/msleep_ggplot2.csv"
+filename <- basename(url)
+download(url,filename)
+```
+
+We are going to read in this data, then test your knowledge of they key dplyr functions select and filter. We are also going to review two different _classes_: data frames and vectors.
+
+```{r}
+## install.packages("swirl")
+library(swirl)
+```
+
+### dplyr Exercises #1
+
+Read in the msleep_ggplot2.csv file with the function read.csv and use the function class to determine what type of object is returned.
+
+```{r}
+dat <- read.csv("msleep_ggplot2.csv")
+class(dat)
+```
+
+### dplyr Exercises #2
+
+Now use the filter function to select only the primates. How many animals in the table are primates? Hint: the nrow function gives you the number of rows of a data frame or matrix.
+
+```{r}
+library(dplyr)
+head(dat)
+
+dat2 <- filter(dat, order=="Primates")
+nrow(dat2)
+```
+
+### dplyr Exercises #3
+
+What is the class of the object you obtain after subsetting the table to only include primates?
+
+```{r}
+dat2 <- filter(dat, order=="Primates")
+class(dat2)
+```
+
+### dplyr Exercises #4
+
+Now use the select function to extract the sleep (total) for the primates. What class is this object? Hint: use %>% to pipe the results of the filter function to select.
+
+```{r}
+y <- filter(dat, order=="Primates") %>% select(sleep_total)
+class(y)
+```
+
+### dplyr Exercises #5
+
+Now we want to calculate the average amount of sleep for primates (the average of the numbers computed above). One challenge is that the mean function requires a vector so, if we simply apply it to the output above, we get an error. Look at the help file for unlist and use it to compute the desired average.
+
+```{r}
+y <- filter(dat, order=="Primates") %>% select(sleep_total) %>% unlist
+mean(y)
+```
+
+### dplyr Exercises #6
+
+For the last exercise, we could also use the dplyr summarize function. We have not introduced this function, but you can read the help file and repeat exercise 5, this time using just filter and summarize to get the answer.
+
+```{r}
+filter(dat, order=="Primates") %>% summarise( mean( sleep_total))
+```

@@ -1,0 +1,154 @@
+{frontmatter}
+
+# Acknowledgments
+
+The authors would like to thank Alex Nones for proofreading the manuscript during its various stages. Also, thanks to Karl Broman for contributing the "Plots to Avoid" section and to Stephanie Hicks for designing some of the exercises. Finally, thanks to John Kimmel and three anonymous referees for excellent feedback and constructive criticism of the book.
+
+This book was conceived during the teaching of several HarvardX courses, coordinated by Heather Sternshein. We are also grateful 
+to our TAs, Idan Ginsburg and Stephanie Chan, and all the students whose questions and comments helped us improve the book. The courses were
+partially funded by NIH grant R25GM114818.  We are very grateful to the National Institute of Health for its support.  
+
+A special thanks goes to all those that edited the book via GitHub pull requests: vjcitn, yeredh, ste-fan, molx, kern3020, josemrecio, hcorrada, neerajt, massie, jmgore75, molecules, lzamparo, eronisko, obicke, knbknb, devrajoh, and  bentyeh.
+
+
+Cover image credit: this photograph is La Mina Falls, El Yunque National Forest, Puerto Rico, taken by Ron Kroetz
+https://www.flickr.com/photos/ronkroetz/14779273923
+Attribution-NoDerivs 2.0 Generic (CC BY-ND 2.0)
+
+{mainmatter}
+
+# Introduction
+
+The unprecedented advance in digital technology during the second half
+of the 20th century has produced a measurement revolution that is
+transforming science. In the life sciences, data analysis is now part
+of practically every research project. Genomics, in particular, is
+being driven by new measurement technologies that permit us to observe certain molecular entities for the first time. These observations are leading to discoveries analogous to identifying microorganisms and other breakthroughs permitted by the invention of the microscope. Choice examples of these technologies are microarrays and next generation sequencing.
+
+Scientific fields that have traditionally relied upon simple data
+analysis techniques have been turned on their heads by these
+technologies. In the past, for example, researchers would measure the
+transcription levels of a single gene of interest. Today, it is
+possible to measure all 20,000+ human genes at once.  Advances such as
+these have brought about a shift from hypothesis to discovery-driven
+research. However, interpreting information extracted from these
+massive and complex datasets requires sophisticated statistical skills
+as one can easily be fooled by patterns arising by chance. This has
+greatly elevated the importance of statistics and data analysis in
+the life sciences.
+
+
+## Who Will Find This Book Useful?
+
+This book was written with the many life science researchers who are becoming data analysts due to the increased reliance on data described above. If you are performing your own analysis you have probably computed p-values, applied Bonferroni corrections, performed principal component  analysis, made a heatmap, or used one or more of the techniques listed in the next section. If you don't quite understand what these techniques are actually doing or if you are not sure if you are using them appropriately, this book is for you. 
+
+Although the content of the book is mostly focused on advanced statistical concepts we start by covering the basics to make sure all readers have a strong grounding on the fundamental statistical concepts required for all data analysis. I find that many introductory statistics courses are taught in a way that makes it hard to relate the concepts to data analysis. Our approach ensures that you learn the connection between practice and theory. For this reason, the first two chapters, Inference and Exploratory Data Analysis, are appropriate for an introductory undergraduate statistics or data science course. After these two chapters the level of statistical sophistication ramps up relatively fast.
+
+Although the typical reader of this book will have a masters or PhD, we try to keep the mathematical content at undergraduate introductory level. You do not need calculus to use this book. However, we do introduce and use linear algebra which is considered more advanced than calculus. By explaining linear algebra in context of data analysis we believe you will be able to learn the basics without knowing calculus. The harder part may be getting used to the symbols and notation. More on this below.
+
+
+
+## What Does This Book Cover?
+
+This book will cover several of the statistical concepts and data
+analytic skills needed to succeed in data-driven life science
+research. We go from relatively basic concepts related to computing
+p-values to advanced topics related to analyzing high-throughput data.
+
+We start with one of the most important topics in statistics and in
+the life sciences: statistical inference. Inference is the use of
+probability to learn population characteristics from data. A typical example
+is deciphering if two groups (for example, cases versus controls) are
+different on average. Specific topics covered include the t-test,
+confidence intervals, association tests, Monte Carlo methods,
+permutation tests and statistical power. We make use of approximations
+made possible by mathematical theory, such as the Central Limit
+Theorem, as well as techniques made possible by modern computing. We
+will learn how to compute p-values and confidence intervals and
+implement basic data analyses. Throughout the book we will describe
+visualization techniques in the statistical computer language *R* that
+are useful for exploring new datasets. For example, we will use these
+to learn when to apply robust statistical techniques.
+
+We will then move on to an introduction to linear models and matrix
+algebra. We will explain why it is beneficial to use linear models to
+analyze differences across groups, and why matrices are useful to
+represent and implement linear models. We continue with a review of
+matrix algebra, including matrix notation and how to multiply matrices
+(both on paper and in R). We will then apply what we covered on matrix
+algebra to linear models. We will learn how to fit linear models in R,
+how to test the significance of differences, and how the standard
+errors for differences are estimated. Furthermore, we will review some
+practical issues with fitting linear models, including collinearity
+and confounding. Finally, we will learn how to fit complex models,
+including interaction terms, how to contrast multiple terms in R, and
+the powerful technique which the functions in R actually use to
+stably fit linear models: the QR decomposition.
+
+In the third part of the book we cover topics related to
+high-dimensional data. Specifically, we describe multiple testing,
+error rate controlling procedures, exploratory data analysis for
+high-throughput data, p-value corrections and the false discovery
+rate. From here we move on to covering statistical modeling. In
+particular, we will discuss parametric distributions, including
+binomial and gamma distributions. Next, we will cover maximum
+likelihood estimation. Finally, we will discuss hierarchical models
+and empirical Bayes techniques and how they are applied in genomics.
+
+We then cover the concepts of distance and dimension reduction. We
+will introduce the mathematical definition of distance and use this to
+motivate the singular value decomposition (SVD) for dimension
+reduction and multi-dimensional scaling. Once we learn this, we will
+be ready to cover hierarchical and k-means clustering. We will follow
+this with a basic introduction to machine learning.
+
+We end by learning about batch effects and how component and factor
+analysis are used to deal with this challenge. In particular, we will
+examine confounding, show examples of batch effects, make the
+connection to factor analysis, and describe surrogate variable
+analysis.
+
+## How Is This Book Different?
+
+While statistics textbooks focus on mathematics, this book focuses on
+using a computer to perform data analysis. This book follows the approach of [Stat Labs](https://www.stat.berkeley.edu/~statlabs/), by Deborah Nolan and Terry Speed.
+Instead of explaining the
+mathematics and theory, and then showing examples, we start by stating
+a practical data-related challenge. This book also includes the computer code that provides a solution to the problem and helps illustrate the
+concepts behind the solution. By running the code yourself, and seeing
+data generation and analysis happen live, you will get a better
+intuition for the concepts, the mathematics, and the theory.
+
+We focus on the practical challenges faced by data analysts in the
+life sciences and introduce mathematics as a tool that can help us
+achieve scientific goals. Furthermore, throughout the book we show the
+R code that performs this analysis and connect the lines of code to
+the statistical and mathematical concepts we explain. All sections of
+this book are reproducible as they were made using *R markdown*
+documents that include R code used to produce the figures, tables and
+results shown in the book. In order to distinguish it, the code is
+shown in the following font:
+
+```{r,eval=FALSE} 
+x <- 2 
+y <- 3 
+print(x+y) 
+```
+
+and the results in different colors, preceded by two hash
+characters (*##*):
+
+```{r,echo=FALSE} 
+x <- 2 
+y <- 3 
+print(x+y) 
+```
+
+We will provide links that will give you access to the raw R markdown
+code so you can easily follow along with the book by programming in R.
+
+At the beginning of each chapter you will see the sentence:
+
+>> The R markdown document for this section is available here.
+
+The word "here" will be a hyperlink to the R markdown file. The best way to read this book is with a computer in front of you, scrolling through that file, and running the R code that produces the results included in the book section you are reading.
