@@ -24,8 +24,8 @@ This course cover:
 
 <br/>
 
-## Certificate of Completition
-You can see the [Certificate of Completition](https://github.com/AlessandroCorradini/Certificates/blob/master/Edx%20-%20Harvard%20University%20-%20Data%20Analysis%20for%20Life%20Science%20XSeries%20Certificate.pdf) and other certificates in my [Certificates Repo](https://github.com/AlessandroCorradini/Certificates) that contains all my certificates obtained through my journey as a self-made Data Science and better developer.
+## Certificate of Completion
+You can see the [Certificate of Completion](https://github.com/AlessandroCorradini/Certificates/blob/master/Edx%20-%20Harvard%20University%20-%20Data%20Analysis%20for%20Life%20Science%20XSeries%20Certificate.pdf) and other certificates in my [Certificates Repo](https://github.com/AlessandroCorradini/Certificates) that contains all my certificates obtained through my journey as a self-made Data Science and better developer.
 
 <br/>
 
