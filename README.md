@@ -16,10 +16,10 @@ This course cover:
 
 ## Courses in this Program
 
-1) [Statistics and R](./01%20-%20PH125.1x%20-%20R%20Basics)
-2) [Introduction to Linear Models and Matrix Algebra](./02%20-%20PH125.2x%20-%20Visualization)
-3) [Statistical Inference and Modeling for High-throughput Experiments](./03%20-%20PH125.3x%20-%20Probability)
-4) [High-Dimensional Data Analysis](./04%20-%20PH125.4x%20-%20Inference%20and%20Modelling)
+1) [Statistics and R](https://github.com/AlessandroCorradini/Harvard-Data-Analysis-for-Life-Science-XSeries/tree/master/01%20-%20PH525.1x%20-%20Statistics%20and%20R)
+2) [Introduction to Linear Models and Matrix Algebra](https://github.com/AlessandroCorradini/Harvard-Data-Analysis-for-Life-Science-XSeries/tree/master/02%20-%20PH525.2x%20-%20Introduction%20to%20Linear%20Models%20and%20Matrix%20Algebra)
+3) [Statistical Inference and Modeling for High-throughput Experiments](https://github.com/AlessandroCorradini/Harvard-Data-Analysis-for-Life-Science-XSeries/tree/master/03%20-%20PH525.3x%20-%20Statistical%20Inference%20and%20Modeling%20for%20High-throughput%20Experiments)
+4) [High-Dimensional Data Analysis](https://github.com/AlessandroCorradini/Harvard-Data-Analysis-for-Life-Science-XSeries/tree/master/04%20-%20PH525.4x%20-%20High-Dimensional%20Data%20Analysis)
 
 
 <br/>
